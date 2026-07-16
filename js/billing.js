@@ -20,6 +20,18 @@ const LS_PADDLE_CONFIG = {
   const btns = { pack500: document.getElementById('buyPack'), pack2500: document.getElementById('buyPro') };
   if (!cfg.token) return;          // sin configurar: los botones siguen deshabilitados
 
+  // atribución sin rastreadores: si la visita llega con utm (p.ej. Google Ads),
+  // se recuerda en local y se adjunta a la compra como customData de Paddle.
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.get('utm_source')) {
+      localStorage.setItem('ls_utm', JSON.stringify({
+        source: q.get('utm_source'), campaign: q.get('utm_campaign') || '',
+        term: q.get('utm_term') || '', when: new Date().toISOString().slice(0, 10),
+      }));
+    }
+  } catch (e) {}
+
   // Paddle.js NO se carga al abrir la página (trae su propio tracker de Paddle):
   // se carga solo cuando el usuario pulsa comprar. Mantiene la promesa
   // "convertir = cero peticiones externas".
@@ -66,7 +78,12 @@ const LS_PADDLE_CONFIG = {
       btn.disabled = true;
       try {
         await loadPaddle();
-        Paddle.Checkout.open({ items: [{ priceId: cfg.prices[key], quantity: 1 }] });
+        let utm = null;
+        try { utm = JSON.parse(localStorage.getItem('ls_utm') || 'null'); } catch (e) {}
+        Paddle.Checkout.open({
+          items: [{ priceId: cfg.prices[key], quantity: 1 }],
+          customData: utm ? { utm_source: utm.source, utm_campaign: utm.campaign, utm_term: utm.term, first_visit: utm.when } : undefined,
+        });
       } finally { btn.disabled = false; }
     });
   }
