@@ -87,6 +87,20 @@ const LS_ENGINE = (() => {
     { id: 'revolut', name: 'Revolut', detect: t => /revolut/i.test(t), num: 'en' },
     { id: 'sparkasse', name: 'Sparkasse', detect: t => /sparkasse/i.test(t), num: 'eu' },
     { id: 'volksbank', name: 'Volksbank', detect: t => /volksbank/i.test(t), num: 'eu' },
+    { id: 'openbank', name: 'Openbank', detect: t => /openbank/i.test(t), num: 'eu' },
+    { id: 'kutxabank', name: 'Kutxabank', detect: t => /kutxabank/i.test(t), num: 'eu' },
+    { id: 'unicaja', name: 'Unicaja', detect: t => /unicaja/i.test(t), num: 'eu' },
+    { id: 'ibercaja', name: 'Ibercaja', detect: t => /ibercaja/i.test(t), num: 'eu' },
+    { id: 'abanca', name: 'ABANCA', detect: t => /abanca/i.test(t), num: 'eu' },
+    { id: 'cajamar', name: 'Cajamar', detect: t => /cajamar/i.test(t), num: 'eu' },
+    { id: 'bancobpm', name: 'Banco BPM', detect: t => /banco\s*bpm/i.test(t), num: 'eu' },
+    { id: 'bper', name: 'BPER Banca', detect: t => /\bbper\b/i.test(t), num: 'eu' },
+    { id: 'fineco', name: 'FinecoBank', detect: t => /fineco/i.test(t), num: 'eu' },
+    { id: 'mediolanum', name: 'Banca Mediolanum', detect: t => /mediolanum/i.test(t), num: 'eu' },
+    { id: 'dkb', name: 'DKB', detect: t => /\bdkb\b|deutsche kreditbank/i.test(t), num: 'eu' },
+    { id: 'commerzbank', name: 'Commerzbank', detect: t => /commerzbank/i.test(t), num: 'eu' },
+    { id: 'comdirect', name: 'comdirect', detect: t => /comdirect/i.test(t), num: 'eu' },
+    { id: 'wise', name: 'Wise', detect: t => /\bwise\b|transferwise/i.test(t), num: 'en' },
     { id: 'generic', name: null, detect: () => true, num: 'eu' },
   ];
 
@@ -110,8 +124,7 @@ const LS_ENGINE = (() => {
   }
 
   // ---------- API pública ----------
-  async function convert(arrayBuffer) {
-    const pages = await extractPages(arrayBuffer);
+  function parsePages(pages) {
     const textPages = pages.filter(p => p.lines.length > 3).length;
     const firstText = pages.map(p => p.lines.map(l => l.text).join('\n')).join('\n').slice(0, 4000);
     const profile = PROFILES.find(p => p.detect(firstText));
@@ -134,5 +147,9 @@ const LS_ENGINE = (() => {
     };
   }
 
-  return { convert };
+  async function convert(arrayBuffer) {
+    return parsePages(await extractPages(arrayBuffer));
+  }
+
+  return { convert, parsePages };
 })();

@@ -20,36 +20,54 @@ const LS_PADDLE_CONFIG = {
   const btns = { pack500: document.getElementById('buyPack'), pack2500: document.getElementById('buyPro') };
   if (!cfg.token) return;          // sin configurar: los botones siguen deshabilitados
 
-  // Paddle.js se carga solo si hay token, para mantener la home 100% sin peticiones externas
-  const s = document.createElement('script');
-  s.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
-  s.onload = () => {
-    if (cfg.env === 'sandbox') Paddle.Environment.set('sandbox');
-    Paddle.Initialize({
-      token: cfg.token,
-      eventCallback: ev => {
-        if (ev.name !== 'checkout.completed') return;
-        // acreditar páginas en local (fulfilment client-side del MVP)
-        const item = ev.data && ev.data.items && ev.data.items[0];
-        const priceId = item && item.price_id;
-        const key = Object.keys(cfg.prices).find(k => cfg.prices[k] === priceId);
-        if (!key) return;
-        const cur = parseInt(localStorage.getItem('ls_credits') || '0', 10);
-        localStorage.setItem('ls_credits', String(cur + cfg.pages[key]));
-        localStorage.setItem('ls_last_order', JSON.stringify({
-          order: ev.data.transaction_id, when: new Date().toISOString(), pages: cfg.pages[key],
-        }));
-        location.reload();
-      },
-    });
-    for (const [key, btn] of Object.entries(btns)) {
-      if (!btn || !cfg.prices[key]) continue;
-      btn.disabled = false;
-      btn.removeAttribute('data-i18n');        // que el cambio de idioma no pise el precio
-      btn.textContent = btn.getAttribute('data-buy-label') || 'Comprar';
-      btn.addEventListener('click', () =>
-        Paddle.Checkout.open({ items: [{ priceId: cfg.prices[key], quantity: 1 }] }));
+  // Paddle.js NO se carga al abrir la página (trae su propio tracker de Paddle):
+  // se carga solo cuando el usuario pulsa comprar. Mantiene la promesa
+  // "convertir = cero peticiones externas".
+  let paddleReady = null;
+  function loadPaddle() {
+    if (!paddleReady) {
+      paddleReady = new Promise((ok, ko) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
+        s.onerror = () => ko(new Error('No se pudo cargar Paddle'));
+        s.onload = () => {
+          if (cfg.env === 'sandbox') Paddle.Environment.set('sandbox');
+          Paddle.Initialize({
+            token: cfg.token,
+            eventCallback: ev => {
+              if (ev.name !== 'checkout.completed') return;
+              // acreditar páginas en local (fulfilment client-side del MVP)
+              const item = ev.data && ev.data.items && ev.data.items[0];
+              const priceId = item && item.price_id;
+              const key = Object.keys(cfg.prices).find(k => cfg.prices[k] === priceId);
+              if (!key) return;
+              const cur = parseInt(localStorage.getItem('ls_credits') || '0', 10);
+              localStorage.setItem('ls_credits', String(cur + cfg.pages[key]));
+              localStorage.setItem('ls_last_order', JSON.stringify({
+                order: ev.data.transaction_id, when: new Date().toISOString(), pages: cfg.pages[key],
+              }));
+              location.reload();
+            },
+          });
+          ok();
+        };
+        document.head.appendChild(s);
+      });
     }
-  };
-  document.head.appendChild(s);
+    return paddleReady;
+  }
+
+  for (const [key, btn] of Object.entries(btns)) {
+    if (!btn || !cfg.prices[key]) continue;
+    btn.disabled = false;
+    btn.removeAttribute('data-i18n');          // que el cambio de idioma no pise el precio
+    btn.textContent = btn.getAttribute('data-buy-label') || 'Comprar';
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      try {
+        await loadPaddle();
+        Paddle.Checkout.open({ items: [{ priceId: cfg.prices[key], quantity: 1 }] });
+      } finally { btn.disabled = false; }
+    });
+  }
 })();

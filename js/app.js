@@ -6,6 +6,8 @@
   const $ = id => document.getElementById(id);
   let lastResult = null;
   let lastName = 'movimientos';
+  let lastFile = null;
+  let consumedForFile = false;
 
   // ---- idioma ----
   const sel = $('lang');
@@ -67,22 +69,54 @@
       return;
     }
     lastName = file.name.replace(/\.pdf$/i, '') || 'movimientos';
+    lastFile = file;
+    consumedForFile = false;
     $('result').hidden = false;
     $('msg').textContent = '…';
     $('msg').className = '';
     $('stats').innerHTML = '';
     $('tbl').innerHTML = '';
     $('dl').hidden = true;
+    $('ocrBtn').hidden = true;
     try {
       const buf = await file.arrayBuffer();
       const r = await LS_ENGINE.convert(buf);
       lastResult = r;
       render(r);
-      if (r.transactions.length) consume(r.pages);   // solo cobra páginas si extrajo algo
+      if (r.transactions.length) { consume(r.pages); consumedForFile = true; }
       showCredits();
+      // ofrecer OCR local si es un escaneo o si la extracción no cuadra
+      const bad = r.scanned || !r.transactions.length ||
+                  (r.coherence.checked > 1 && r.coherence.ok < r.coherence.checked);
+      $('ocrBtn').hidden = !bad;
     } catch (e) {
       $('msg').textContent = 'Error: ' + e.message;
       $('msg').className = 'warn';
+    }
+  }
+
+  async function handleOCR() {
+    if (!lastFile) return;
+    $('ocrBtn').disabled = true;
+    $('msg').className = '';
+    try {
+      const buf = await lastFile.arrayBuffer();   // buffer nuevo: pdf.js consume el anterior
+      const pages = await LS_OCR.extractPagesOCR(buf, LS_I18N.lang, (p, total, prog) => {
+        $('msg').textContent = LS_I18N.t('ocrRunning')
+          .replace('{p}', p).replace('{total}', total) + ' ' + Math.round(prog * 100) + '%';
+      });
+      const r = LS_ENGINE.parsePages(pages);
+      r.scanned = false;                          // ya viene del OCR
+      lastResult = r;
+      render(r);
+      if (r.transactions.length && !consumedForFile) { consume(r.pages); consumedForFile = true; }
+      showCredits();
+    } catch (e) {
+      $('msg').textContent = 'OCR: ' + ((e && (e.message || (e.data && e.data.message))) || String(e));
+      $('msg').className = 'warn';
+    } finally {
+      $('ocrBtn').disabled = false;
+      $('ocrBtn').hidden = true;
     }
   }
 
@@ -122,6 +156,8 @@
   $('dlCsv').addEventListener('click', () => lastResult && LS_EXPORTS.csv(lastResult.transactions, lastName));
   $('dlXlsx').addEventListener('click', () => lastResult && LS_EXPORTS.xlsx(lastResult.transactions, lastName));
   $('dlHolded').addEventListener('click', () => lastResult && LS_EXPORTS.holded(lastResult.transactions, lastName));
+
+  $('ocrBtn').addEventListener('click', handleOCR);
 
   const drop = $('drop');
   $('file').addEventListener('change', e => handle(e.target.files[0]));
