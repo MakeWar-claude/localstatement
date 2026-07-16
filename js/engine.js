@@ -38,7 +38,7 @@ const LS_ENGINE = (() => {
           parse: s => parseFloat(s.replace(/\s+/g, '').replace(/,/g, '')) },
   };
   const RE_FECHA_EU = /\b(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})\b/;
-  const RE_RUIDO = /^(saldo|balance|total|fecha|date|p[áa]gina|page|extracto|statement)\b/i;
+  const RE_RUIDO = /^(saldo|balance|total|fecha|date|p[áa]gina|page|extracto|statement|kontostand|kontoauszug|solde|saldo iniziale|saldo finale|alter kontostand|neuer kontostand|übertrag|uebertrag|summe|beginning balance|ending balance|opening balance|closing balance)\b/i;
   const RE_IBANISH = /(?:\d{4}[\s.]){3,}/;   // cabeceras con nº de cuenta/IBAN no son movimientos
 
   // limpieza de artefactos típicos de OCR dentro de cifras: "1, ,50"→"1,50", "3O4"→"304"

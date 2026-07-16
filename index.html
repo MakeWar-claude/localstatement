@@ -38,7 +38,9 @@
     <div id="result" hidden>
       <div id="stats"></div>
       <p id="msg"></p>
-      <p style="text-align:center"><button id="ocrBtn" class="ghost" hidden data-i18n="ocrBtn">Reintentar con OCR local (beta)</button></p>
+      <p style="text-align:center"><button id="ocrBtn" class="ghost" hidden data-i18n="ocrBtn">Reintentar con OCR local (beta)</button>
+      <button id="diagBtn" class="ghost" hidden data-i18n="diagBtn">Ayúdanos a soportar tu banco</button></p>
+      <div id="diagBox" hidden></div>
       <div id="tbl"></div>
       <div id="dl" hidden>
         <button id="dlXlsx" data-i18n="dlXlsx">Descargar Excel</button>
@@ -110,6 +112,7 @@
 <script src="lib/xlsx.full.min.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/ocr.js"></script>
+<script src="js/diagnostic.js"></script>
 <script src="js/analysis.js"></script>
 <script src="js/exports.js"></script>
 <script src="js/i18n.js"></script>

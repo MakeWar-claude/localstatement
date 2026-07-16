@@ -88,7 +88,10 @@
       // ofrecer OCR local si es un escaneo o si la extracción no cuadra
       const bad = r.scanned || !r.transactions.length ||
                   (r.coherence.checked > 1 && r.coherence.ok < r.coherence.checked);
-      $('ocrBtn').hidden = !bad;
+      $('ocrBtn').hidden = r.scanned ? false : true;
+      // ofrecer "ayúdanos con tu banco" cuando saca pocos/ningún movimiento y NO es escaneo
+      $('diagBtn').hidden = !( !r.scanned && (r.transactions.length === 0 || r.transactions.length < r.pages * 2) );
+      $('diagBox').hidden = true;
     } catch (e) {
       $('msg').textContent = 'Error: ' + e.message;
       $('msg').className = 'warn';
@@ -161,6 +164,34 @@
   $('dlHolded').addEventListener('click', () => lastResult && LS_EXPORTS.holded(lastResult.transactions, lastName));
 
   $('ocrBtn').addEventListener('click', handleOCR);
+
+  async function handleDiag() {
+    if (!lastFile) return;
+    $('diagBtn').disabled = true;
+    try {
+      const buf = await lastFile.arrayBuffer();
+      const report = await LS_DIAGNOSTIC.buildReport(buf, { bank: lastResult && lastResult.bank, lang: LS_I18N.lang });
+      const box = $('diagBox');
+      box.hidden = false;
+      box.innerHTML = `<p class="diag-intro">${LS_I18N.t('diagIntro')}</p>` +
+        `<textarea id="diagText" readonly rows="10"></textarea>` +
+        `<div class="diag-actions"><button id="diagCopy">${LS_I18N.t('diagCopy')}</button>` +
+        `<a id="diagMail" class="ghost-link">${LS_I18N.t('diagMail')}</a></div>`;
+      document.getElementById('diagText').value = report;
+      document.getElementById('diagCopy').addEventListener('click', () => {
+        navigator.clipboard.writeText(report).then(() => {
+          document.getElementById('diagCopy').textContent = LS_I18N.t('diagCopied');
+        });
+      });
+      const subject = encodeURIComponent('Soporte de banco: ' + (lastResult && lastResult.bank || lastFile.name));
+      document.getElementById('diagMail').href =
+        `mailto:hello@localstatement.com?subject=${subject}&body=${encodeURIComponent(LS_I18N.t('diagBody') + '\n\n' + report)}`;
+      box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (e) {
+      $('msg').textContent = 'Diag: ' + e.message; $('msg').className = 'warn';
+    } finally { $('diagBtn').disabled = false; }
+  }
+  $('diagBtn').addEventListener('click', handleDiag);
 
   // análisis: 2 gratis/mes; ilimitado con bono activo
   const ANA_FREE = 2;

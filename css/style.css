@@ -141,3 +141,15 @@ footer a { color: var(--muted); }
 .ana-ed-c { max-width: 18rem; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
 select.ana-ed { background: var(--surface); color: var(--ink); border: 1px solid var(--line);
                 border-radius: .3rem; font-size: .8rem; padding: .15rem .3rem; max-width: 11rem; }
+#diagBox { max-width: 44rem; margin: 1rem auto 0; text-align: left; background: var(--surface);
+           border: 1px solid var(--line); border-radius: .6rem; padding: 1rem 1.2rem; }
+.diag-intro { font-size: .9rem; color: var(--muted); margin: 0 0 .6rem; }
+#diagText { width: 100%; font: 11px Consolas, ui-monospace, monospace; background: var(--bg);
+            color: var(--ink); border: 1px solid var(--line); border-radius: .4rem; padding: .6rem; resize: vertical; }
+.diag-actions { display: flex; gap: .8rem; align-items: center; margin-top: .7rem; }
+.ghost-link { color: var(--accent); font-size: .9rem; font-weight: 600; text-decoration: none; }
+.ghost-link:hover { text-decoration: underline; }
+#diagBtn { margin-left: .4rem; }
+.ls-badge { font-size: .88rem; max-width: 60ch; margin: .6rem auto; padding: .5rem .9rem;
+            border: 1px solid var(--line); border-radius: .5rem; background: var(--surface); color: var(--muted); }
+.ls-badge.ok { border-color: var(--good); color: var(--good); font-weight: 600; }
