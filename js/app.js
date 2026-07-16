@@ -134,6 +134,9 @@
       chips.push(`<span class="stat ${all ? 'good' : 'warnc'}" title="${t('coherentTip')}">` +
         `${all ? '✓' : '△'} ${t('coherent')}: ${r.coherence.ok}/${r.coherence.checked}</span>`);
     }
+    if (r.fixed > 0) {
+      chips.push(`<span class="stat" title="${t('fixedTip')}">${t('fixedChip').replace('{n}', r.fixed)}</span>`);
+    }
     $('stats').innerHTML = chips.join('');
 
     if (r.scanned) { $('msg').textContent = t('scanned'); $('msg').className = 'warn'; return; }
