@@ -15,8 +15,23 @@
     if (l === LS_I18N.lang) o.selected = true;
     sel.appendChild(o);
   });
-  sel.addEventListener('change', () => LS_I18N.apply(sel.value));
+  sel.addEventListener('change', () => { LS_I18N.apply(sel.value); showCredits(); });
   LS_I18N.apply();
+
+  // ---- contador del bono comprado (lo acredita billing.js al completar el pago) ----
+  function showCredits() {
+    const n = parseInt(localStorage.getItem('ls_credits') || '0', 10);
+    let el = $('creditsBadge');
+    if (!n) { if (el) el.remove(); return; }
+    if (!el) {
+      el = document.createElement('span');
+      el.id = 'creditsBadge';
+      el.className = 'privacy';
+      document.querySelector('#drop .privacy').after(el);
+    }
+    el.textContent = '★ ' + LS_I18N.t('creditsLeft').replace('{n}', n.toLocaleString());
+  }
+  showCredits();
 
   // ---- cuota gratuita local (20 págs/mes) — se sustituirá por créditos Paddle ----
   const QUOTA = 20;
