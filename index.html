@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LocalStatement — Convierte extractos bancarios PDF a Excel, 100% en tu navegador</title>
+<meta name="description" content="Convierte extractos bancarios PDF a Excel/CSV sin subirlos a ningún servidor. 100% en tu navegador, con verificación contable al céntimo. Santander, BBVA, CaixaBank, Intesa, N26, Revolut y más.">
+<link rel="canonical" href="https://localstatement.com/">
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%231D7A55'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='Segoe UI, sans-serif' font-weight='700'%3E⇩%3C/text%3E%3C/svg%3E">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"LocalStatement",
+ "applicationCategory":"FinanceApplication","operatingSystem":"Web",
+ "description":"Bank statement PDF to Excel/CSV converter that runs 100% in your browser. Statements are never uploaded.",
+ "offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"}}
+</script>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <a class="logo" href="/">local<span class="dot">statement</span>.com</a>
+  <select id="lang" aria-label="Idioma / Language"></select>
+</header>
+
+<main>
+  <div class="hero">
+    <h1 data-i18n="tagline">Convierte extractos bancarios PDF a Excel sin que salgan de tu ordenador</h1>
+    <p class="sub" data-i18n="sub">Todo ocurre en tu navegador: tu extracto nunca se sube a ningún servidor.</p>
+
+    <label id="drop">
+      <input type="file" id="file" accept="application/pdf">
+      <span class="big" data-i18n="drop">Arrastra aquí tu extracto PDF</span>
+      <span class="or" data-i18n="dropOr">o haz clic para elegirlo</span>
+      <span class="privacy" data-i18n="privacy">✓ 100% local · sin registro · sin subir nada</span>
+    </label>
+
+    <div id="result" hidden>
+      <div id="stats"></div>
+      <p id="msg"></p>
+      <div id="tbl"></div>
+      <div id="dl" hidden>
+        <button id="dlXlsx" data-i18n="dlXlsx">Descargar Excel</button>
+        <button id="dlCsv" class="ghost" data-i18n="dlCsv">Descargar CSV</button>
+        <button id="dlHolded" class="ghost" data-i18n="dlHolded">CSV para Holded</button>
+      </div>
+    </div>
+  </div>
+
+  <section id="how">
+    <h2 data-i18n="howTitle">Cómo funciona</h2>
+    <div class="grid3">
+      <div class="card step"><p data-i18n="how1"></p></div>
+      <div class="card step"><p data-i18n="how2"></p></div>
+      <div class="card step"><p data-i18n="how3"></p></div>
+    </div>
+  </section>
+
+  <section id="why">
+    <h2 data-i18n="whyTitle">¿Por qué LocalStatement?</h2>
+    <div class="grid3">
+      <div class="card"><h3 data-i18n="why1t"></h3><p data-i18n="why1"></p></div>
+      <div class="card"><h3 data-i18n="why2t"></h3><p data-i18n="why2"></p></div>
+      <div class="card"><h3 data-i18n="why3t"></h3><p data-i18n="why3"></p></div>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <h2 data-i18n="priceTitle">Precios</h2>
+    <div class="grid3">
+      <div class="card price">
+        <h3 data-i18n="priceFree">Gratis</h3>
+        <div class="amount">0 €</div>
+        <p data-i18n="priceFreeDetail"></p>
+      </div>
+      <div class="card price featured">
+        <h3 data-i18n="pricePack">Bono 500 páginas</h3>
+        <div class="amount" data-i18n="pricePackPrice">19 €</div>
+        <p data-i18n="pricePackDetail"></p>
+        <p style="margin-top:.8rem"><button disabled data-i18n="priceSoon">Muy pronto</button></p>
+      </div>
+      <div class="card price">
+        <h3 data-i18n="pricePro">Bono 2.500 páginas</h3>
+        <div class="amount" data-i18n="priceProPrice">59 €</div>
+        <p data-i18n="priceProDetail"></p>
+        <p style="margin-top:.8rem"><button disabled data-i18n="priceSoon">Muy pronto</button></p>
+      </div>
+    </div>
+    <p class="pricenote" data-i18n="priceNote"></p>
+  </section>
+
+  <section id="faq">
+    <h2 data-i18n="faqTitle">Preguntas frecuentes</h2>
+    <details><summary data-i18n="faq1q"></summary><p data-i18n="faq1a"></p></details>
+    <details><summary data-i18n="faq2q"></summary><p data-i18n="faq2a"></p></details>
+    <details><summary data-i18n="faq3q"></summary><p data-i18n="faq3a"></p></details>
+  </section>
+</main>
+
+<footer>
+  <p>© 2026 LocalStatement · <a href="mailto:hola@localstatement.com">hola@localstatement.com</a></p>
+</footer>
+
+</div>
+<script src="lib/pdf.min.js"></script>
+<script src="lib/xlsx.full.min.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/exports.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
