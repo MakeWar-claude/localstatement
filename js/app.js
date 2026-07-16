@@ -162,8 +162,33 @@
 
   $('ocrBtn').addEventListener('click', handleOCR);
 
+  // análisis: 2 gratis/mes; ilimitado con bono activo
+  const ANA_FREE = 2;
+  let anaCountedFile = null;
+  function anaState() {
+    const now = new Date();
+    const key = `${now.getFullYear()}-${now.getMonth()}`;
+    let st = {};
+    try { st = JSON.parse(localStorage.getItem('ls_ana_quota') || '{}'); } catch (e) {}
+    if (st.key !== key) st = { key, used: 0 };
+    return st;
+  }
+
   $('anaBtn').addEventListener('click', () => {
     if (!lastResult || !lastResult.transactions.length) return;
+    const st = anaState();
+    const isNewFile = anaCountedFile !== lastFile;
+    if (isNewFile && credits() <= 0 && st.used >= ANA_FREE) {
+      $('msg').textContent = LS_I18N.t('anaQuotaOver');
+      $('msg').className = 'warn';
+      document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    if (isNewFile) {
+      st.used += 1;
+      localStorage.setItem('ls_ana_quota', JSON.stringify(st));
+      anaCountedFile = lastFile;
+    }
     const rep = $('anaReport');
     rep.hidden = false;
     LS_ANALYSIS.render(rep, lastResult, LS_I18N.lang, k => LS_I18N.t(k));
