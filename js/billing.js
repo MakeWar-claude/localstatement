@@ -45,6 +45,7 @@ const LS_PADDLE_CONFIG = {
     for (const [key, btn] of Object.entries(btns)) {
       if (!btn || !cfg.prices[key]) continue;
       btn.disabled = false;
+      btn.removeAttribute('data-i18n');        // que el cambio de idioma no pise el precio
       btn.textContent = btn.getAttribute('data-buy-label') || 'Comprar';
       btn.addEventListener('click', () =>
         Paddle.Checkout.open({ items: [{ priceId: cfg.prices[key], quantity: 1 }] }));
