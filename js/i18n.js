@@ -35,6 +35,8 @@ const LS_I18N = (() => {
       faq1q: '¿De verdad no subís mi extracto?', faq1a: 'De verdad. La conversión usa pdf.js (el motor PDF de Firefox) ejecutándose en tu navegador. Puedes verificarlo: abre las herramientas de desarrollador (F12), pestaña Red, y convierte un extracto — verás que no se envía ninguna petición.',
       faq2q: '¿Qué bancos funcionan?', faq2a: 'Cualquier PDF digital con extracto tabular en formato europeo (fecha + concepto + importe + saldo): Santander, BBVA, CaixaBank, Sabadell, Bankinter, ING, Intesa Sanpaolo, UniCredit, N26, Revolut y más. Los PDFs escaneados (foto/papel) aún no: el OCR local está en camino.',
       faq3q: '¿Y si mi banco no sale bien?', faq3a: 'Envíanos una página de ejemplo (tacha lo que quieras) y añadimos el perfil de tu banco, normalmente en 48 horas.',
+      faq4q: '¿No hay cuentas? ¿Dónde vive mi bono?', faq4a: 'No hay cuentas porque no hay servidor: tu bono se guarda en el almacenamiento local de este navegador, junto a tu preferencia de idioma. Tu comprobante real es el recibo de Paddle que recibes por email. Si borras los datos del navegador o cambias de equipo, escríbenos a hola@localstatement.com con ese recibo y te lo restauramos.',
+      quotaOver: 'Has agotado tus páginas gratis de este mes. Compra un bono para seguir convirtiendo — no caduca nunca.',
       langName: 'Español',
     },
     en: {
@@ -68,6 +70,8 @@ const LS_I18N = (() => {
       faq1q: 'You really don’t upload my statement?', faq1a: 'Really. Conversion uses pdf.js (Firefox’s PDF engine) running in your browser. Verify it: open developer tools (F12), Network tab, convert a statement — you’ll see no request is sent.',
       faq2q: 'Which banks work?', faq2a: 'Any digital PDF with a tabular statement in European format (date + description + amount + balance): Santander, BBVA, CaixaBank, Sabadell, Bankinter, ING, Intesa Sanpaolo, UniCredit, N26, Revolut and more. Scanned PDFs aren’t supported yet — local OCR is on the way.',
       faq3q: 'What if my bank doesn’t parse well?', faq3a: 'Send us one sample page (redact whatever you want) and we’ll add your bank’s profile, usually within 48 hours.',
+      faq4q: 'No accounts? Where does my pack live?', faq4a: 'There are no accounts because there is no server: your pack is stored in this browser’s local storage, next to your language preference. Your real proof of purchase is the Paddle receipt you get by email. If you clear browser data or switch devices, email hola@localstatement.com with that receipt and we’ll restore it.',
+      quotaOver: 'You’ve used up your free pages for this month. Buy a pack to keep converting — it never expires.',
       langName: 'English',
     },
     it: {
@@ -101,6 +105,8 @@ const LS_I18N = (() => {
       faq1q: 'Davvero non caricate il mio estratto conto?', faq1a: 'Davvero. La conversione usa pdf.js (il motore PDF di Firefox) in esecuzione nel tuo browser. Verificalo: apri gli strumenti sviluppatore (F12), scheda Rete, converti un estratto — nessuna richiesta viene inviata.',
       faq2q: 'Quali banche funzionano?', faq2a: 'Qualsiasi PDF digitale con estratto tabellare in formato europeo: Intesa Sanpaolo, UniCredit, Santander, BBVA, N26, Revolut e altre. I PDF scansionati non sono ancora supportati — l’OCR locale è in arrivo.',
       faq3q: 'E se la mia banca non viene letta bene?', faq3a: 'Inviaci una pagina di esempio (oscura ciò che vuoi) e aggiungeremo il profilo della tua banca, di solito entro 48 ore.',
+      faq4q: 'Niente account? Dove vive il mio pacchetto?', faq4a: 'Non ci sono account perché non c’è un server: il tuo pacchetto è salvato nella memoria locale di questo browser. La tua prova d’acquisto reale è la ricevuta di Paddle che ricevi via email. Se cancelli i dati del browser o cambi dispositivo, scrivici a hola@localstatement.com con quella ricevuta e lo ripristineremo.',
+      quotaOver: 'Hai esaurito le pagine gratuite di questo mese. Acquista un pacchetto per continuare — non scade mai.',
       langName: 'Italiano',
     },
     de: {
@@ -134,6 +140,8 @@ const LS_I18N = (() => {
       faq1q: 'Sie laden meinen Kontoauszug wirklich nicht hoch?', faq1a: 'Wirklich. Die Umwandlung nutzt pdf.js (die PDF-Engine von Firefox) direkt in Ihrem Browser. Prüfen Sie es: Entwicklertools öffnen (F12), Netzwerk-Tab, einen Auszug umwandeln — es wird keine Anfrage gesendet.',
       faq2q: 'Welche Banken funktionieren?', faq2a: 'Jedes digitale PDF mit tabellarischem Auszug im europäischen Format: Sparkasse, Volksbank, N26, Santander, BBVA, Revolut und mehr. Gescannte PDFs noch nicht — lokales OCR ist unterwegs.',
       faq3q: 'Was, wenn meine Bank nicht gut erkannt wird?', faq3a: 'Senden Sie uns eine Beispielseite (schwärzen Sie, was Sie möchten) und wir fügen das Profil Ihrer Bank hinzu, meist innerhalb von 48 Stunden.',
+      faq4q: 'Keine Konten? Wo lebt mein Paket?', faq4a: 'Es gibt keine Konten, weil es keinen Server gibt: Ihr Paket wird im lokalen Speicher dieses Browsers abgelegt. Ihr echter Kaufbeleg ist die Paddle-Quittung per E-Mail. Wenn Sie Browserdaten löschen oder das Gerät wechseln, schreiben Sie an hola@localstatement.com mit dieser Quittung und wir stellen es wieder her.',
+      quotaOver: 'Ihre kostenlosen Seiten für diesen Monat sind aufgebraucht. Kaufen Sie ein Paket — es verfällt nie.',
       langName: 'Deutsch',
     },
   };

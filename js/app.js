@@ -33,7 +33,7 @@
   }
   showCredits();
 
-  // ---- cuota gratuita local (20 págs/mes) — se sustituirá por créditos Paddle ----
+  // ---- cuota gratuita (20 págs/mes) + bono comprado (ls_credits, lo acredita billing.js) ----
   const QUOTA = 20;
   function quotaState() {
     const now = new Date();
@@ -43,15 +43,29 @@
     if (st.key !== key) st = { key, used: 0 };
     return st;
   }
-  function quotaUse(pages) {
+  const credits = () => parseInt(localStorage.getItem('ls_credits') || '0', 10);
+  const freeLeft = () => Math.max(0, QUOTA - quotaState().used);
+  const pagesLeft = () => freeLeft() + credits();
+  function consume(pages) {
     const st = quotaState();
-    st.used += pages;
+    const fromFree = Math.min(pages, Math.max(0, QUOTA - st.used));
+    st.used += fromFree;
     localStorage.setItem('ls_quota', JSON.stringify(st));
+    const rest = pages - fromFree;
+    if (rest > 0) localStorage.setItem('ls_credits', String(Math.max(0, credits() - rest)));
   }
 
   // ---- conversión ----
   async function handle(file) {
     if (!file || file.type !== 'application/pdf') return;
+    if (pagesLeft() <= 0) {
+      $('result').hidden = false;
+      $('stats').innerHTML = ''; $('tbl').innerHTML = ''; $('dl').hidden = true;
+      $('msg').textContent = LS_I18N.t('quotaOver');
+      $('msg').className = 'warn';
+      document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
     lastName = file.name.replace(/\.pdf$/i, '') || 'movimientos';
     $('result').hidden = false;
     $('msg').textContent = '…';
@@ -64,7 +78,8 @@
       const r = await LS_ENGINE.convert(buf);
       lastResult = r;
       render(r);
-      quotaUse(r.pages);
+      if (r.transactions.length) consume(r.pages);   // solo cobra páginas si extrajo algo
+      showCredits();
     } catch (e) {
       $('msg').textContent = 'Error: ' + e.message;
       $('msg').className = 'warn';
