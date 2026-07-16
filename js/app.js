@@ -162,6 +162,14 @@
 
   $('ocrBtn').addEventListener('click', handleOCR);
 
+  $('anaBtn').addEventListener('click', () => {
+    if (!lastResult || !lastResult.transactions.length) return;
+    const rep = $('anaReport');
+    rep.hidden = false;
+    LS_ANALYSIS.render(rep, lastResult, LS_I18N.lang, k => LS_I18N.t(k));
+    rep.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
   const drop = $('drop');
   $('file').addEventListener('change', e => handle(e.target.files[0]));
   drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });

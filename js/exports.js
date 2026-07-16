@@ -46,5 +46,30 @@ const LS_EXPORTS = (() => {
     download(new Blob(['﻿' + head + body], { type: 'text/csv;charset=utf-8' }), name + '_holded.csv');
   }
 
-  return { csv, xlsx, holded };
+  // Excel con categorías + hoja resumen (informe premium)
+  function xlsxAnalysis(txs, agg, T) {
+    const rows = txs.map(t => ({
+      Fecha: t.date, Concepto: t.concept, Categoria: t.category || '',
+      Importe: t.amount, Saldo: t.balance,
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{ wch: 11 }, { wch: 48 }, { wch: 22 }, { wch: 12 }, { wch: 12 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Movimientos');
+    const resumen = [
+      { A: T('anaIncome'), B: agg.income },
+      { A: T('anaExpense'), B: -agg.expense },
+      { A: T('anaNet'), B: agg.net },
+      { A: '', B: '' },
+      ...agg.topCats.map(([k, v]) => ({ A: agg.names[k] || k, B: -v })),
+      { A: '', B: '' },
+      { A: 'localstatement.com', B: '' },
+    ];
+    const ws2 = XLSX.utils.json_to_sheet(resumen, { skipHeader: true });
+    ws2['!cols'] = [{ wch: 28 }, { wch: 14 }];
+    XLSX.utils.book_append_sheet(wb, ws2, T('anaTitle').slice(0, 28));
+    XLSX.writeFile(wb, 'localstatement_informe.xlsx');
+  }
+
+  return { csv, xlsx, holded, xlsxAnalysis };
 })();

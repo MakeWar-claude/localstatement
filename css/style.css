@@ -89,3 +89,55 @@ footer { margin-top: 4rem; padding: 1.5rem 0 2.5rem; border-top: 1px solid var(-
          color: var(--muted); font-size: .82rem; text-align: center; }
 footer a { color: var(--muted); }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* ---------- informe de análisis (premium) ---------- */
+:root { --ana-in: #1D7A55; --ana-ex: #4A5FA5; }
+@media (prefers-color-scheme: dark) { :root { --ana-in: #37A473; --ana-ex: #7C90D6; } }
+#anaReport { position: relative; background: var(--surface); border: 1px solid var(--line);
+             border-radius: .6rem; padding: 1.4rem 1.6rem; margin-top: 1.2rem; text-align: left; }
+.ana-brand { font-size: .85rem; letter-spacing: .02em; color: var(--muted); }
+.ana-brand b { color: var(--accent); }
+#anaReport h2 { font-size: 1.25rem; margin: .2rem 0 .1rem; }
+#anaReport h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .07em;
+                color: var(--muted); margin: 1.6rem 0 .5rem; }
+.ana-sub { color: var(--muted); font-size: .85rem; margin: 0; }
+.ana-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; margin-top: 1rem; }
+@media (max-width: 600px) { .ana-tiles { grid-template-columns: 1fr; } }
+.ana-tile { border: 1px solid var(--line); border-radius: .5rem; padding: .7rem .9rem; }
+.ana-tile .k { display: block; font-size: .75rem; text-transform: uppercase;
+               letter-spacing: .06em; color: var(--muted); }
+.ana-tile .v { font: 600 1.35rem/1.3 Consolas, ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+.ana-tile .v.pos { color: var(--ana-in); }
+.ana-tile .v.exp { color: var(--ana-ex); }
+.ana-chart { position: relative; }
+.ana-lbl { font: 11px "Segoe UI", system-ui, sans-serif; fill: var(--muted); }
+.ana-val { font: 11px Consolas, ui-monospace, monospace; fill: var(--ink); }
+.ana-bar { fill: var(--accent); }
+.ana-bar:hover { opacity: .85; }
+.ana-in { fill: var(--ana-in); }
+.ana-ex { fill: var(--ana-ex); }
+.ana-grid { stroke: var(--line); stroke-width: 1; }
+.ana-line { stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; }
+.ana-dot { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.ana-legend { display: flex; gap: 1.2rem; font-size: .8rem; color: var(--muted); margin-top: .3rem; }
+.ana-legend .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: .35rem; }
+.ana-legend .sw.in { background: var(--ana-in); }
+.ana-legend .sw.ex { background: var(--ana-ex); }
+.ana-tip { position: absolute; background: var(--ink); color: var(--bg); font-size: .78rem;
+           padding: .25rem .55rem; border-radius: .3rem; pointer-events: none; white-space: nowrap; z-index: 5; }
+.ana-actions { display: flex; gap: .6rem; margin-top: 1.4rem; flex-wrap: wrap; }
+.ana-footer { font-size: .75rem; color: var(--muted); margin: 1.2rem 0 0; border-top: 1px solid var(--line); padding-top: .7rem; }
+@media print {
+  body * { visibility: hidden; }
+  #anaReport, #anaReport * { visibility: visible; }
+  #anaReport { position: absolute; inset: 0 auto auto 0; width: 100%; border: 0; }
+  .no-print, .ana-tip { display: none !important; }
+}
+.ana-editor { margin-top: 1.2rem; border: 1px solid var(--line); border-radius: .5rem; padding: .6rem .9rem; }
+.ana-editor summary { cursor: pointer; font-size: .88rem; color: var(--accent); font-weight: 600; }
+.ana-ed-wrap { max-height: 16rem; overflow: auto; margin-top: .6rem; }
+.ana-ed-wrap table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+.ana-ed-wrap td { padding: .2rem .4rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.ana-ed-c { max-width: 18rem; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+select.ana-ed { background: var(--surface); color: var(--ink); border: 1px solid var(--line);
+                border-radius: .3rem; font-size: .8rem; padding: .15rem .3rem; max-width: 11rem; }
