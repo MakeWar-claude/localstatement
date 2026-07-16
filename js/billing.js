@@ -6,11 +6,11 @@
 'use strict';
 
 const LS_PADDLE_CONFIG = {
-  env: 'sandbox',
-  token: '',                       // p.ej. 'test_abc123...' (sandbox) o 'live_...'
+  env: 'production',
+  token: 'live_fb724f0b625afa856ee34ee98df',
   prices: {
-    pack500:  '',                  // price ID del bono 500 páginas (19 €)
-    pack2500: '',                  // price ID del bono 2.500 páginas (59 €)
+    pack500:  'pri_01kxnb4av36btnjgg7c06spy25',   // 500 páginas · 19 €
+    pack2500: 'pri_01kxnb4r60s2frw6m4c599s5nt',   // 2.500 páginas · 59 €
   },
   pages: { pack500: 500, pack2500: 2500 },
 };
