@@ -38,6 +38,37 @@ const LS_ENGINE = (() => {
           parse: s => parseFloat(s.replace(/\s+/g, '').replace(/,/g, '')) },
   };
   const RE_FECHA_EU = /\b(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})\b/;
+  // nombres de mes multiidioma (ES/EN/IT/DE/FR/PT/NL) -> nº de mes
+  const MESES = {
+    ene:1,jan:1,gen:1,janv:1,januar:1,enero:1,january:1,gennaio:1,janvier:1,janeiro:1,januari:1,
+    feb:2,fev:2,febbraio:2,febrero:2,february:2,februar:2,fevrier:2,février:2,fevereiro:2,februari:2,
+    mar:3,mrt:3,marzo:3,march:3,maerz:3,'märz':3,mars:3,marco:3,'março':3,maart:3,
+    abr:4,apr:4,avr:4,april:4,abril:4,aprile:4,avril:4,
+    may:5,mai:5,mag:5,mayo:5,maggio:5,mei:5,maio:5,
+    jun:6,giu:6,junio:6,june:6,juni:6,juin:6,giugno:6,junho:6,
+    jul:7,lug:7,julio:7,july:7,juli:7,juillet:7,luglio:7,julho:7,juli2:7,
+    ago:8,aug:8,agosto:8,august:8,aout:8,'août':8,agostoo:8,augustus:8,
+    sep:9,set:9,sept:9,septiembre:9,september:9,settembre:9,septembre:9,setembro:9,
+    oct:10,okt:10,ott:10,octubre:10,october:10,oktober:10,octobre:10,ottobre:10,outubro:10,
+    nov:11,noviembre:11,november:11,novembre:11,novembro:11,
+    dic:12,dec:12,dez:12,diciembre:12,december:12,dezember:12,dicembre:12,decembre:12,'décembre':12,dezembro:12,
+  };
+  const MES_RE = new RegExp('\\b(\\d{1,2})\\s+(' + Object.keys(MESES).sort((a,b)=>b.length-a.length).join('|') + ')\\.?\\s*(\\d{4})?\\b', 'i');
+
+  let hintYear = null;   // año del extracto (lo fija parsePages leyendo la cabecera)
+
+  function matchDate(text) {
+    const m1 = text.match(RE_FECHA_EU);
+    if (m1) return { raw: m1[0], iso: normDate(m1[0]) };
+    const m2 = text.match(MES_RE);
+    if (m2) {
+      const d = m2[1].padStart(2, '0');
+      const mo = String(MESES[m2[2].toLowerCase()] || 0).padStart(2, '0');
+      const y = m2[3] || hintYear || String(new Date().getFullYear());
+      if (mo !== '00') return { raw: m2[0], iso: `${y}-${mo}-${d}` };
+    }
+    return null;
+  }
   const RE_RUIDO = /^(saldo|balance|total|fecha|date|p[áa]gina|page|extracto|statement|kontostand|kontoauszug|solde|saldo iniziale|saldo finale|alter kontostand|neuer kontostand|übertrag|uebertrag|summe|beginning balance|ending balance|opening balance|closing balance)\b/i;
   const RE_IBANISH = /(?:\d{4}[\s.]){3,}/;   // cabeceras con nº de cuenta/IBAN no son movimientos
 
@@ -78,7 +109,7 @@ const LS_ENGINE = (() => {
 
   function columnParse(line, cols, num) {
     const text = cleanText(line.text);
-    const f = text.match(RE_FECHA_EU);
+    const f = matchDate(text);
     if (!f) return null;
     // celdas numéricas puras con su posición x
     const nums = [];
@@ -104,12 +135,12 @@ const LS_ENGINE = (() => {
       else if (best === 'amount') amount = nb.v;
     }
     if (amount === null && balance === null) return null;
-    let concept = text.replace(f[0], '');
-    const f2 = concept.match(RE_FECHA_EU);
-    if (f2) concept = concept.replace(f2[0], '');
+    let concept = text.replace(f.raw, '');
+    const f2 = matchDate(concept);                 // fecha valor: fuera del concepto
+    if (f2) concept = concept.replace(f2.raw, '');
     concept = concept.replace(num.re, '').replace(/\s+/g, ' ').replace(/\bEUR\b/g, '').trim();
     if (RE_RUIDO.test(concept) || RE_IBANISH.test(concept)) return null;
-    return { date: normDate(f[0]), concept, amount, balance, rawAmount: '', rawBalance: '' };
+    return { date: f.iso, concept, amount, balance, rawAmount: '', rawBalance: '' };
   }
 
   // ---------- autocuadre: la cadena de saldos impresa corrige importes y signos ----------
@@ -143,20 +174,20 @@ const LS_ENGINE = (() => {
   // ---------- heurística genérica (validada: Santander app 19/19 coherencia) ----------
   function genericParse(line, num) {
     const text = cleanText(line.text);
-    const f = text.match(RE_FECHA_EU);
+    const f = matchDate(text);
     if (!f) return null;
     const amounts = [...text.matchAll(num.re)].map(m => m[0]);
     if (!amounts.length) return null;
     const amount = amounts.length >= 2 ? amounts[amounts.length - 2] : amounts[0];
     const balance = amounts.length >= 2 ? amounts[amounts.length - 1] : '';
-    let concept = text.replace(f[0], '');
-    const f2 = concept.match(RE_FECHA_EU);           // fecha valor fuera del concepto
-    if (f2) concept = concept.replace(f2[0], '');
+    let concept = text.replace(f.raw, '');
+    const f2 = matchDate(concept);                   // fecha valor fuera del concepto
+    if (f2) concept = concept.replace(f2.raw, '');
     for (const a of amounts) concept = concept.replace(a, '');
     concept = concept.replace(/\s+/g, ' ').replace(/\bEUR\b/g, '').trim();
     if (RE_RUIDO.test(concept) || RE_IBANISH.test(concept)) return null;
     return {
-      date: normDate(f[0]),
+      date: f.iso,
       concept,
       amount: num.parse(amount),
       balance: balance ? num.parse(balance) : null,
@@ -267,6 +298,10 @@ const LS_ENGINE = (() => {
     const profile = PROFILES.find(p => p.detect(firstText));
     const num = NUM[profile.num] || NUM.eu;
     const cols = detectColumns(pages);
+    // año del extracto para fechas sin año (p.ej. holandés "2 okt"): el más frecuente en cabecera
+    const years = (firstText.match(/\b20\d{2}\b/g) || []);
+    hintYear = years.length ? years.sort((a, b) =>
+      years.filter(y => y === b).length - years.filter(y => y === a).length)[0] : null;
 
     const txs = [];
     for (const pg of pages) {
