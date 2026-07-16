@@ -48,17 +48,24 @@ const LS_PADDLE_CONFIG = {
             token: cfg.token,
             eventCallback: ev => {
               if (ev.name !== 'checkout.completed') return;
-              // acreditar páginas en local (fulfilment client-side del MVP)
-              const item = ev.data && ev.data.items && ev.data.items[0];
-              const priceId = item && item.price_id;
-              const key = Object.keys(cfg.prices).find(k => cfg.prices[k] === priceId);
-              if (!key) return;
-              const cur = parseInt(localStorage.getItem('ls_credits') || '0', 10);
-              localStorage.setItem('ls_credits', String(cur + cfg.pages[key]));
-              localStorage.setItem('ls_last_order', JSON.stringify({
-                order: ev.data.transaction_id, when: new Date().toISOString(), pages: cfg.pages[key],
-              }));
-              location.reload();
+              const txId = ev.data && ev.data.transaction_id;
+              // idempotencia: si ya acreditamos esta transacción, no repetir (Paddle puede
+              // disparar el evento más de una vez por checkout).
+              try {
+                const done = JSON.parse(localStorage.getItem('ls_orders') || '[]');
+                if (txId && done.includes(txId)) return;
+                const item = ev.data && ev.data.items && ev.data.items[0];
+                const priceId = item && (item.price_id || (item.price && item.price.id));
+                const key = Object.keys(cfg.prices).find(k => cfg.prices[k] === priceId);
+                if (!key) { console.warn('LS: compra sin price_id reconocido', priceId); return; }
+                const cur = parseInt(localStorage.getItem('ls_credits') || '0', 10);
+                localStorage.setItem('ls_credits', String(cur + cfg.pages[key]));
+                if (txId) { done.push(txId); localStorage.setItem('ls_orders', JSON.stringify(done.slice(-50))); }
+                localStorage.setItem('ls_last_order', JSON.stringify({
+                  order: txId, pages: cfg.pages[key],
+                }));
+                location.reload();
+              } catch (e) { console.warn('LS billing', e); }
             },
           });
           ok();

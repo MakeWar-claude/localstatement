@@ -13,13 +13,21 @@ const LS_EXPORTS = (() => {
 
   const fmtEu = n => n === null ? '' : n.toFixed(2).replace('.', ',');
 
+  // celda CSV segura: neutraliza inyección de fórmulas (=,+,-,@,tab,CR al inicio)
+  // y escapa comillas. Excel/LibreOffice ejecutan =CMD() aunque esté entre comillas.
+  function cell(s) {
+    s = String(s == null ? '' : s);
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+
   // CSV separado por ; (convención Excel europeo), BOM para tildes
   function csv(txs, name) {
     const head = 'fecha;concepto;importe;saldo\n';
     const body = txs.map(t =>
-      [t.date, '"' + t.concept.replace(/"/g, '""') + '"', fmtEu(t.amount), fmtEu(t.balance)].join(';')
-    ).join('\n');
-    download(new Blob(['﻿' + head + body], { type: 'text/csv;charset=utf-8' }), name + '.csv');
+      [t.date, cell(t.concept), fmtEu(t.amount), fmtEu(t.balance)].join(';')
+    ).join('\r\n');
+    download(new Blob(['﻿' + head.replace('\n', '\r\n') + body], { type: 'text/csv;charset=utf-8' }), name + '.csv');
   }
 
   // Excel de verdad (SheetJS): fechas como fecha, importes como número
@@ -41,9 +49,9 @@ const LS_EXPORTS = (() => {
       const debe = t.amount < 0 ? fmtEu(Math.abs(t.amount)) : '';
       const haber = t.amount >= 0 ? fmtEu(t.amount) : '';
       const [y, m, d] = t.date.split('-');
-      return [`${d}/${m}/${y}`, '"' + t.concept.replace(/"/g, '""') + '"', debe, haber].join(';');
-    }).join('\n');
-    download(new Blob(['﻿' + head + body], { type: 'text/csv;charset=utf-8' }), name + '_holded.csv');
+      return [`${d}/${m}/${y}`, cell(t.concept), debe, haber].join(';');
+    }).join('\r\n');
+    download(new Blob(['﻿' + head.replace('\n', '\r\n') + body], { type: 'text/csv;charset=utf-8' }), name + '_holded.csv');
   }
 
   // Excel con categorías + hoja resumen (informe premium)
@@ -61,7 +69,7 @@ const LS_EXPORTS = (() => {
       { A: T('anaExpense'), B: -agg.expense },
       { A: T('anaNet'), B: agg.net },
       { A: '', B: '' },
-      ...agg.topCats.map(([k, v]) => ({ A: agg.names[k] || k, B: -v })),
+      ...agg.topCats.map(([k, v]) => ({ A: k.startsWith('custom:') ? k.slice(7) : (agg.names[k] || k), B: -v })),
       { A: '', B: '' },
       { A: 'localstatement.com', B: '' },
     ];

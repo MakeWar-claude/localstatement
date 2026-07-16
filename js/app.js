@@ -56,42 +56,51 @@
     const rest = pages - fromFree;
     if (rest > 0) localStorage.setItem('ls_credits', String(Math.max(0, credits() - rest)));
   }
+  // firma de fichero para no cobrar dos veces el mismo (re-soltar, cambiar idioma…)
+  const chargedFiles = new Set();
+  const fileSig = f => `${f.name}|${f.size}|${f.lastModified}`;
+
+  function showQuotaOver() {
+    $('result').hidden = false;
+    $('stats').innerHTML = ''; $('tbl').innerHTML = ''; $('dl').hidden = true;
+    $('ocrBtn').hidden = true; $('diagBtn').hidden = true;
+    $('anaReport').hidden = true; $('anaReport').innerHTML = '';
+    $('msg').textContent = LS_I18N.t('quotaOver');
+    $('msg').className = 'warn';
+    document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' });
+  }
 
   // ---- conversión ----
   async function handle(file) {
     if (!file || file.type !== 'application/pdf') return;
-    if (pagesLeft() <= 0) {
-      $('result').hidden = false;
-      $('stats').innerHTML = ''; $('tbl').innerHTML = ''; $('dl').hidden = true;
-      $('msg').textContent = LS_I18N.t('quotaOver');
-      $('msg').className = 'warn';
-      document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' });
-      return;
-    }
+    // limpiar TODO el estado anterior (incluido informe/diag que no deben arrastrarse)
+    $('result').hidden = false;
+    $('msg').textContent = '…'; $('msg').className = '';
+    $('stats').innerHTML = ''; $('tbl').innerHTML = ''; $('dl').hidden = true;
+    $('ocrBtn').hidden = true; $('diagBtn').hidden = true;
+    $('diagBox').hidden = true; $('diagBox').innerHTML = '';
+    $('anaReport').hidden = true; $('anaReport').innerHTML = '';
+    if (pagesLeft() <= 0 && !chargedFiles.has(fileSig(file))) { showQuotaOver(); return; }
     lastName = file.name.replace(/\.pdf$/i, '') || 'movimientos';
     lastFile = file;
     consumedForFile = false;
-    $('result').hidden = false;
-    $('msg').textContent = '…';
-    $('msg').className = '';
-    $('stats').innerHTML = '';
-    $('tbl').innerHTML = '';
-    $('dl').hidden = true;
-    $('ocrBtn').hidden = true;
     try {
       const buf = await file.arrayBuffer();
       const r = await LS_ENGINE.convert(buf);
       lastResult = r;
+      const sig = fileSig(file);
+      const already = chargedFiles.has(sig);
+      // fichero nuevo con movimientos pero SIN cuota suficiente para todas sus páginas -> bloquear
+      if (!already && r.transactions.length && pagesLeft() < r.pages) { showQuotaOver(); return; }
       render(r);
-      if (r.transactions.length) { consume(r.pages); consumedForFile = true; }
+      if (r.transactions.length && !already) { consume(r.pages); chargedFiles.add(sig); consumedForFile = true; }
       showCredits();
-      // ofrecer OCR local si es un escaneo o si la extracción no cuadra
-      const bad = r.scanned || !r.transactions.length ||
-                  (r.coherence.checked > 1 && r.coherence.ok < r.coherence.checked);
-      $('ocrBtn').hidden = r.scanned ? false : true;
-      // ofrecer "ayúdanos con tu banco" cuando saca pocos/ningún movimiento y NO es escaneo
+      // OCR local: escaneo SIN capa de texto, o escaneo CON capa basura (hay movimientos
+      // pero los saldos no cuadran → el OCR relee la imagen y suele arreglarlo).
+      const incoherente = r.coherence.checked > 1 && r.coherence.ok < r.coherence.checked;
+      $('ocrBtn').hidden = !(r.scanned || (r.transactions.length && incoherente));
+      // "ayúdanos con tu banco": digital pero saca pocos/ningún movimiento (formato no soportado)
       $('diagBtn').hidden = !( !r.scanned && (r.transactions.length === 0 || r.transactions.length < r.pages * 2) );
-      $('diagBox').hidden = true;
     } catch (e) {
       $('msg').textContent = 'Error: ' + e.message;
       $('msg').className = 'warn';
@@ -216,8 +225,10 @@
       return;
     }
     if (isNewFile) {
-      st.used += 1;
-      localStorage.setItem('ls_ana_quota', JSON.stringify(st));
+      if (credits() <= 0) {   // solo cuenta contra el gratis si NO hay bono (los de pago van ilimitados)
+        st.used += 1;
+        localStorage.setItem('ls_ana_quota', JSON.stringify(st));
+      }
       anaCountedFile = lastFile;
     }
     const rep = $('anaReport');

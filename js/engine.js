@@ -31,11 +31,23 @@ const LS_ENGINE = (() => {
 
   // ---------- utilidades numéricas por convención ----------
   // regex tolerantes a fallos de OCR: espacios sueltos dentro del número
+  // parse tolerante a: signo menos delante o DETRÁS (45,00-), paréntesis (1.234,56),
+  // separador de miles por punto o espacio, espacio de OCR tras la coma.
+  function parseAmount(s, decimalComma) {
+    const t = s.trim();
+    const neg = /^[(\-]/.test(t) || /[)\-]$/.test(t);
+    let core = t.replace(/[()\s\-]/g, '');
+    core = decimalComma ? core.replace(/\./g, '').replace(',', '.') : core.replace(/,/g, '');
+    const v = parseFloat(core);
+    return isNaN(v) ? null : (neg ? -Math.abs(v) : v);
+  }
+  // (?<!\w) desambigua el espacio-miles: en "REF123 456,78" NO fusiona (123 va pegado a letras);
+  // en "10 750,00" sí (precedido de espacio/inicio). Menos delante o detrás, y paréntesis.
   const NUM = {
-    eu: { re: /-?\d{1,3}(?:[.\s]\d{3})*,\s?\d{2}(?!\d)|-?\d+,\s?\d{2}(?!\d)/g,
-          parse: s => parseFloat(s.replace(/\s+/g, '').replace(/\./g, '').replace(',', '.')) },
-    en: { re: /-?\d{1,3}(?:[,\s]\d{3})*\.\s?\d{2}(?!\d)|-?\d+\.\s?\d{2}(?!\d)/g,
-          parse: s => parseFloat(s.replace(/\s+/g, '').replace(/,/g, '')) },
+    eu: { re: /(?<![\w.,])\(?-?\d{1,3}(?:[.\s]\d{3})*,\s?\d{2}-?\)?(?!\d)|(?<![\w.,])\(?-?\d+,\s?\d{2}-?\)?(?!\d)/g,
+          parse: s => parseAmount(s, true) },
+    en: { re: /(?<![\w.,])\(?-?\d{1,3}(?:[,\s]\d{3})*\.\s?\d{2}-?\)?(?!\d)|(?<![\w.,])\(?-?\d+\.\s?\d{2}-?\)?(?!\d)/g,
+          parse: s => parseAmount(s, false) },
   };
   const RE_FECHA_EU = /\b(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})\b/;
   // nombres de mes multiidioma (ES/EN/IT/DE/FR/PT/NL) -> nº de mes
@@ -139,7 +151,10 @@ const LS_ENGINE = (() => {
     const f2 = matchDate(concept);                 // fecha valor: fuera del concepto
     if (f2) concept = concept.replace(f2.raw, '');
     concept = concept.replace(num.re, '').replace(/\s+/g, ' ').replace(/\bEUR\b/g, '').trim();
-    if (RE_RUIDO.test(concept) || RE_IBANISH.test(concept)) return null;
+    // IBANISH solo descarta si la línea es CASI SOLO un nº de cuenta (poco texto real
+    // tras quitar los grupos de dígitos); así no perdemos "TRANSF 1234 5678 ... NOMINA".
+    if (RE_RUIDO.test(concept)) return null;
+    if (RE_IBANISH.test(concept) && concept.replace(/[\d\s.]/g, '').length < 8) return null;
     return { date: f.iso, concept, amount, balance, rawAmount: '', rawBalance: '' };
   }
 
@@ -185,7 +200,10 @@ const LS_ENGINE = (() => {
     if (f2) concept = concept.replace(f2.raw, '');
     for (const a of amounts) concept = concept.replace(a, '');
     concept = concept.replace(/\s+/g, ' ').replace(/\bEUR\b/g, '').trim();
-    if (RE_RUIDO.test(concept) || RE_IBANISH.test(concept)) return null;
+    // IBANISH solo descarta si la línea es CASI SOLO un nº de cuenta (poco texto real
+    // tras quitar los grupos de dígitos); así no perdemos "TRANSF 1234 5678 ... NOMINA".
+    if (RE_RUIDO.test(concept)) return null;
+    if (RE_IBANISH.test(concept) && concept.replace(/[\d\s.]/g, '').length < 8) return null;
     return {
       date: f.iso,
       concept,
@@ -198,9 +216,11 @@ const LS_ENGINE = (() => {
   function normDate(s) {
     const m = s.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
     if (!m) return s;
-    const [, d, mo, y] = m;
-    const yy = y.length === 2 ? '20' + y : y;
-    return `${yy}-${mo.padStart(2, '0')}-${d.padStart(2, '0')}`;   // ISO, día-primero (convención UE)
+    let d = +m[1], mo = +m[2];
+    const yy = m[3].length === 2 ? '20' + m[3] : m[3];
+    // día-primero (convención UE); si el mes sale >12 es un formato MM/DD (EEUU) -> intercambiar
+    if (mo > 12 && d <= 12) { const t = d; d = mo; mo = t; }
+    return `${yy}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
   }
 
   // ---------- perfiles por banco ----------
@@ -311,12 +331,17 @@ const LS_ENGINE = (() => {
       }
     }
 
-    // autocuadre solo si la extracción directa no cuadra ya
+    // autocuadre solo si la extracción directa no cuadra ya. GUARDIÁN: se prueba
+    // sobre una copia y solo se acepta si MEJORA la coherencia; si no, se descarta
+    // (un saldo mal leído no debe corromper importes que estaban bien).
     let fixed = 0;
     let coh = coherence(txs);
     if (coh.checked > 0 && coh.ok < coh.checked) {
-      fixed = chainFix(txs);
-      if (fixed) coh = coherence(txs);
+      const before = txs.map(t => t.amount);
+      const n = chainFix(txs);
+      const coh2 = coherence(txs);
+      if (n > 0 && coh2.ok > coh.ok) { fixed = n; coh = coh2; }
+      else { txs.forEach((t, i) => { t.amount = before[i]; }); }   // rollback
     }
 
     return {

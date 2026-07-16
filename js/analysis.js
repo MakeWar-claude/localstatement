@@ -11,7 +11,7 @@ const LS_ANALYSIS = (() => {
     ['salary', /n[oó]mina|payroll|salari|gehalt|stipendio|salaire|\bloon\b|pension/i],
     ['bizum', /bizum|env[ií]o a m[oó]vil|envio a movil|cobro envio movil/i],
     ['cash', /cajero|reint|:?\batm\b|efectivo|bargeld|contant|withdrawal|retirada|geldautomat/i],
-    ['supermarket', /mercadona|lidl|aldi|carrefour|\bspar\b|hiperdino|eroski|\bdia\b|alcampo|supermerc|supermarkt|supermarch|edeka|rewe|albert heijn|\bjumbo\b|esselunga|conad|\bcoop\b|continente|pingo doce/i],
+    ['supermarket', /mercadona|lidl|aldi|carrefour|\bspar\b|hiperdino|eroski|supermercados?\s+d[ií]a|\bdia\s?s\.?a\b|alcampo|supermerc|supermarkt|supermarch|edeka|rewe|albert heijn|\bjumbo\b|esselunga|conad|\bcoop\b|continente|pingo doce/i],
     ['dining', /restaur|\bbar\b|caf[eé]|mcdonald|burger|\bkfc\b|pizz|tapas|kebab|sushi|ristorante|bistro|panader|bäcker|boulanger/i],
     ['transport', /gasolin|repsol|cepsa|shell|\bbp\b|uber|cabify|\bbolt\b|taxi|renfe|metro|guagua|autobus|parking|peaje|tanken|sncf|trenitalia|\bns\b|ov-chipkaart/i],
     ['subscriptions', /netflix|spotify|\bhbo\b|disney|prime video|apple\.com|icloud|google \w|youtube|microsoft|adobe|openai|chatgpt/i],
@@ -55,8 +55,11 @@ const LS_ANALYSIS = (() => {
 
   function categorize(tx) {
     const n = norm(tx.concept);
-    for (const r of getRules()) {
-      if (n && (n.startsWith(r.token) || r.token.startsWith(n))) return r.cat;
+    // reglas del usuario: SOLO prefijo (no la dirección inversa, que secuestraba genéricos),
+    // token de ≥5 chars (no "pago"/"bizum" cortos), y gana la MÁS específica (más larga).
+    if (n) {
+      const hits = getRules().filter(r => r.token && r.token.length >= 5 && n.startsWith(r.token));
+      if (hits.length) return hits.sort((a, b) => b.token.length - a.token.length)[0].cat;
     }
     for (const [key, re] of RULES) if (re.test(tx.concept)) return key;
     return tx.amount > 0 ? 'income' : 'other';
@@ -160,7 +163,7 @@ const LS_ANALYSIS = (() => {
   function balanceLine(txs) {
     const pts = txs.filter(t => t.balance !== null).map(t => ({ d: t.date, v: t.balance }));
     if (pts.length < 3) return '';
-    if (pts[0].d > pts[pts.length - 1].d) pts.reverse();
+    pts.sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);   // por fecha, no por orden de aparición
     const w = 560, h = 150, pad = 6, bottom = 20;
     const vs = pts.map(p => p.v);
     const min = Math.min(...vs), max = Math.max(...vs), span = (max - min) || 1;
