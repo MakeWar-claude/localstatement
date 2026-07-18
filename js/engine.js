@@ -344,6 +344,9 @@ const LS_ENGINE = (() => {
       else { txs.forEach((t, i) => { t.amount = before[i]; }); }   // rollback
     }
 
+    // nº de cuenta del extracto (IBAN/CCC en cabecera) para la exportación Norma 43
+    const account = (typeof LS_CONTABLE !== 'undefined') ? LS_CONTABLE.accountFromText(firstText) : null;
+
     return {
       pages: pages.length,
       textPages,
@@ -351,6 +354,7 @@ const LS_ENGINE = (() => {
       bank: profile.name,
       method: cols ? 'columns' : 'generic',
       fixed,
+      account,
       transactions: txs,
       coherence: coh,
     };

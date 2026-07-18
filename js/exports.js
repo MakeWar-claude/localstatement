@@ -54,6 +54,22 @@ const LS_EXPORTS = (() => {
     download(new Blob(['﻿' + head.replace('\n', '\r\n') + body], { type: 'text/csv;charset=utf-8' }), name + '_holded.csv');
   }
 
+  // Norma 43 (cuaderno AEB 43): lo importan A3, Sage 50/ContaPlus, ContaSol, Odoo…
+  // Valida el fichero antes de descargarlo; si no cuadra, no se entrega.
+  function norma43(txs, meta, name) {
+    const out = LS_CONTABLE.norma43(txs, meta);
+    const check = LS_CONTABLE.validate43(out.content);
+    if (!check.ok) throw new Error('N43: ' + check.errors.join('; '));
+    download(new Blob([out.content], { type: 'text/plain;charset=utf-8' }), name + '.n43');
+    return out;
+  }
+
+  // CSV de diario en partida doble (Debe/Haber) con cuentas configurables
+  function diario(txs, opts, name) {
+    const content = LS_CONTABLE.diario(txs, opts);
+    download(new Blob(['﻿' + content], { type: 'text/csv;charset=utf-8' }), name + '_diario.csv');
+  }
+
   // Excel con categorías + hoja resumen (informe premium)
   function xlsxAnalysis(txs, agg, T) {
     const rows = txs.map(t => ({
@@ -79,5 +95,5 @@ const LS_EXPORTS = (() => {
     XLSX.writeFile(wb, 'localstatement_informe.xlsx');
   }
 
-  return { csv, xlsx, holded, xlsxAnalysis };
+  return { csv, xlsx, holded, norma43, diario, xlsxAnalysis };
 })();

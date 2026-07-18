@@ -172,6 +172,34 @@
   $('dlXlsx').addEventListener('click', () => lastResult && LS_EXPORTS.xlsx(lastResult.transactions, lastName));
   $('dlHolded').addEventListener('click', () => lastResult && LS_EXPORTS.holded(lastResult.transactions, lastName));
 
+  // ---- exportación contable (Norma 43 + diario Debe/Haber) ----
+  const ctaBanco = $('ctaBanco'), ctaContra = $('ctaContra');
+  ctaBanco.value = localStorage.getItem('ls_cta_banco') || ctaBanco.value;
+  ctaContra.value = localStorage.getItem('ls_cta_contra') || ctaContra.value;
+  ctaBanco.addEventListener('change', () => localStorage.setItem('ls_cta_banco', ctaBanco.value.trim()));
+  ctaContra.addEventListener('change', () => localStorage.setItem('ls_cta_contra', ctaContra.value.trim()));
+
+  $('dlN43').addEventListener('click', () => {
+    if (!lastResult || !lastResult.transactions.length) return;
+    try {
+      const out = LS_EXPORTS.norma43(lastResult.transactions, lastResult.account, lastName);
+      const note = $('n43Note');
+      const acc = lastResult.account;
+      const parts = [];
+      if (acc) parts.push(LS_I18N.t('n43Acc').replace('{c}', `${acc.entidad}-${acc.oficina}-**-${acc.cuenta}`));
+      if (out.derived) parts.push(LS_I18N.t('n43NoBal'));
+      note.textContent = parts.join(' · ');
+      note.hidden = !parts.length;
+    } catch (e) {
+      $('msg').textContent = 'N43: ' + e.message; $('msg').className = 'warn';
+    }
+  });
+  $('dlDiario').addEventListener('click', () => {
+    if (!lastResult || !lastResult.transactions.length) return;
+    LS_EXPORTS.diario(lastResult.transactions,
+      { cuentaBanco: ctaBanco.value.trim(), contrapartida: ctaContra.value.trim() }, lastName);
+  });
+
   $('ocrBtn').addEventListener('click', handleOCR);
 
   async function handleDiag() {

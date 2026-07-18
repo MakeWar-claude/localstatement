@@ -56,6 +56,16 @@ select#lang { background: var(--surface); color: var(--ink); border: 1px solid v
 #tbl td.neg { color: var(--bad); }
 #tbl td.pos { color: var(--good); }
 #dl { display: flex; gap: .6rem; justify-content: center; margin-top: 1rem; flex-wrap: wrap; }
+#contable { flex-basis: 100%; display: flex; gap: .6rem; justify-content: center; align-items: center;
+            flex-wrap: wrap; margin-top: .6rem; padding-top: .8rem; border-top: 1px dashed var(--line); }
+.contable-title { flex-basis: 100%; text-align: center; font-size: .82rem; font-weight: 600;
+                  color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.contable-opts { display: flex; gap: .8rem; align-items: center; flex-wrap: wrap; justify-content: center; }
+.contable-opts label { font-size: .8rem; color: var(--muted); display: flex; gap: .35rem; align-items: center; }
+.contable-opts input { width: 7.5rem; padding: .3rem .45rem; border: 1px solid var(--line);
+                       border-radius: .35rem; background: var(--surface); color: var(--ink);
+                       font: .85rem Consolas, ui-monospace, monospace; }
+#n43Note { flex-basis: 100%; text-align: center; }
 button { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: .45rem;
          padding: .6rem 1.2rem; font: 600 .95rem/1 "Segoe UI", system-ui, sans-serif; cursor: pointer; }
 button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }

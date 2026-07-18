@@ -45,8 +45,18 @@
       <div id="dl" hidden>
         <button id="dlXlsx" data-i18n="dlXlsx">Descargar Excel</button>
         <button id="dlCsv" class="ghost" data-i18n="dlCsv">Descargar CSV</button>
-        <button id="dlHolded" class="ghost" data-i18n="dlHolded">CSV para Holded</button>
         <button id="anaBtn" class="ghost" data-i18n="anaBtn">📊 Ver análisis</button>
+        <div id="contable">
+          <span class="contable-title" data-i18n="contableTitle">Para tu programa contable</span>
+          <button id="dlN43" class="ghost">Norma 43 (A3, Sage, ContaSol…)</button>
+          <button id="dlDiario" class="ghost" data-i18n="dlDiario">CSV Diario (Debe/Haber)</button>
+          <button id="dlHolded" class="ghost" data-i18n="dlHolded">CSV para Holded</button>
+          <span class="contable-opts">
+            <label><span data-i18n="contableBank">Cuenta banco</span> <input id="ctaBanco" value="572000000" size="10" inputmode="numeric"></label>
+            <label><span data-i18n="contableCounter">Contrapartida</span> <input id="ctaContra" value="555000000" size="10" inputmode="numeric"></label>
+          </span>
+          <span id="n43Note" class="privacy" hidden></span>
+        </div>
       </div>
       <div id="anaReport" hidden></div>
     </div>
@@ -100,6 +110,7 @@
     <details><summary data-i18n="faq2q"></summary><p data-i18n="faq2a"></p></details>
     <details><summary data-i18n="faq3q"></summary><p data-i18n="faq3a"></p></details>
     <details><summary data-i18n="faq4q"></summary><p data-i18n="faq4a"></p></details>
+    <details><summary data-i18n="faq5q"></summary><p data-i18n="faq5a"></p></details>
   </section>
 </main>
 
@@ -110,6 +121,7 @@
 </div>
 <script src="lib/pdf.min.js"></script>
 <script src="lib/xlsx.full.min.js"></script>
+<script src="js/contable.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/ocr.js"></script>
 <script src="js/diagnostic.js"></script>
